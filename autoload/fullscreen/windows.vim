@@ -67,12 +67,12 @@ win32gui.SetWindowPos(top_wnd, win32con.HWND_TOP, x, y, dx-x, dy-y, win32con.SWP
 
 # Black background
 bkgnd_wnd = win32gui.CreateWindow(class_atom, '',
-              win32con.WS_CHILD | win32con.WS_VISIBLE,
+              win32con.WS_CHILD,
               0, 0, dx-x, dy-y,
               top_wnd,
               None, win32api.GetModuleHandle(None), None)
 win32gui.SetWindowPos(bkgnd_wnd, win32con.HWND_BOTTOM, 0, 0, 0, 0,
-             win32con.SWP_NOACTIVATE | win32con.SWP_NOMOVE | win32con.SWP_NOSIZE)
+             win32con.SWP_NOACTIVATE | win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_SHOWWINDOW)
 
 restore_data = vim.bindeval('s:restore_data')
 restore_data['window_placement'] = old_window_placement
