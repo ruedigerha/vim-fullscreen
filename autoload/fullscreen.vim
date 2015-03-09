@@ -44,7 +44,7 @@ except ImportError:
   return g:fullscreen_python_win32ext_available
 endfunction
 
-if has('gui_mac')
+if has('fullscreen')
 
   " MacVim has a native fullscreen mode
   function fullscreen#toggle()
