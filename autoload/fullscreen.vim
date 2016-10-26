@@ -27,17 +27,11 @@
 let g:fullscreen_python_win32ext_available = 0
 
 function! s:check_win32_extensions()
-python <<
-import vim
-try:
-  import win32api
-  import win32con
-  import win32gui
-  vim.vars['fullscreen_python_win32ext_available'] = 1
-  
-except ImportError:
-  vim.vars['fullscreen_python_win32ext_available'] = 0
-.
+  if has('python3')
+    silent! python3 import vimfullscreen
+  else
+    silent! python import vimfullscreen
+  endif
   if !g:fullscreen_python_win32ext_available
     echomsg "VimFullscreen: Python Win32 Extensions not found. Please install for best fullscreen experience."
   endif
@@ -59,7 +53,7 @@ if has('fullscreen')
     call fullscreen#default#maximize()
   endfunction
 
-elseif has('gui_win32') && has('python') && s:check_win32_extensions()
+elseif has('gui_win32') && (has('python3') || has('python')) && s:check_win32_extensions()
   
   function fullscreen#toggle()
     if fullscreen#windows#is_active()

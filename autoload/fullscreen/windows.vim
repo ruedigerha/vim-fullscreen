@@ -24,97 +24,32 @@
 " (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 " SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-let s:restore_data = {}
+if has('python3')
+  let s:Python='python3'
+else
+  let s:Python='python'
+endif
 
-" TODO: There isn't much error handling code here
+exec s:Python "import vimfullscreen"
+
+let g:fullscreen_active = 0
 
 function fullscreen#windows#maximize()
   if fullscreen#windows#is_active()
     return
   endif
-python <<
-import win32api
-import win32con
-import win32gui
-
-top_wnd = win32gui.FindWindow('Vim', None)
-win32api.SendMessage(top_wnd, win32con.WM_SYSCOMMAND, win32con.SC_MAXIMIZE, 0)
-.
+  exec s:Python "vimfullscreen.maximize()"
 endfunction
 
 function fullscreen#windows#activate()
-python <<
-import vim
-import win32api
-import win32con
-import win32gui
-
-bkgndWndClass = win32gui.WNDCLASS()
-bkgndWndClass.hbrBackground = win32gui.GetStockObject(win32con.BLACK_BRUSH)
-bkgndWndClass.hCursor = win32gui.LoadCursor(0, win32con.IDC_ARROW)
-bkgndWndClass.lpszClassName = 'VimFullscreenBkgnd'
-class_atom = win32gui.RegisterClass(bkgndWndClass)
-
-top_wnd = win32gui.FindWindow('Vim', None)
-mon = win32api.MonitorFromRect(win32gui.GetWindowRect(top_wnd), win32con.MONITOR_DEFAULTTONEAREST)
-(x, y, dx, dy) = win32api.GetMonitorInfo(mon)['Monitor']
-old_window_placement = win32gui.GetWindowPlacement(top_wnd)
-old_style = win32api.GetWindowLong(top_wnd, win32con.GWL_STYLE)
-old_exstyle = win32api.GetWindowLong(top_wnd, win32con.GWL_EXSTYLE)
-win32api.SetWindowLong(top_wnd, win32con.GWL_STYLE, old_style & ~(win32con.WS_CAPTION | win32con.WS_BORDER | win32con.WS_THICKFRAME))
-win32api.SetWindowLong(top_wnd, win32con.GWL_EXSTYLE, old_exstyle & ~win32con.WS_EX_WINDOWEDGE)
-win32gui.SetWindowPos(top_wnd, win32con.HWND_TOP, x, y, dx-x, dy-y, win32con.SWP_SHOWWINDOW | win32con.SWP_FRAMECHANGED)
-
-# Black background
-bkgnd_wnd = win32gui.CreateWindow(class_atom, '',
-              win32con.WS_CHILD,
-              0, 0, dx-x, dy-y,
-              top_wnd,
-              None, win32api.GetModuleHandle(None), None)
-win32gui.SetWindowPos(bkgnd_wnd, win32con.HWND_BOTTOM, 0, 0, 0, 0,
-             win32con.SWP_NOACTIVATE | win32con.SWP_NOMOVE | win32con.SWP_NOSIZE | win32con.SWP_SHOWWINDOW)
-
-restore_data = vim.bindeval('s:restore_data')
-restore_data['window_placement'] = old_window_placement
-restore_data['style'] = old_style
-restore_data['exstyle'] = old_exstyle
-restore_data['class_atom'] = class_atom
-.
+  exec s:Python "vimfullscreen.activate()"
 endfunction
 
 function fullscreen#windows#deactivate()
-python <<
-import vim
-import win32api
-import win32con
-import win32gui
-
-top_wnd = win32gui.FindWindow('Vim', None)
-restore_data = vim.bindeval('s:restore_data')
-
-bkgnd_wnd = 0
-def find_bg_wnd(hwnd, lparam):
-  global bkgnd_wnd
-  if win32gui.GetClassName(hwnd) == 'VimFullscreenBkgnd':
-    bkgnd_wnd = hwnd
-    return True
-  return True
-win32gui.EnumChildWindows(top_wnd, find_bg_wnd, None)
-win32gui.DestroyWindow(bkgnd_wnd)
-win32gui.UnregisterClass(restore_data['class_atom'], None)
-
-win32api.SetWindowLong(top_wnd, win32con.GWL_STYLE, restore_data['style'])
-win32api.SetWindowLong(top_wnd, win32con.GWL_EXSTYLE, restore_data['exstyle'])
-
-win32gui.SetWindowPlacement(top_wnd, restore_data['window_placement'])
-if restore_data['window_placement'][1] == win32con.SW_SHOWMAXIMIZED:
-  win32api.SendMessage(top_wnd, win32con.WM_SYSCOMMAND, win32con.SC_RESTORE, 0)
-  win32api.SendMessage(top_wnd, win32con.WM_SYSCOMMAND, win32con.SC_MAXIMIZE, 0)
-.
-let s:restore_data = {}
+  exec s:Python "vimfullscreen.deactivate()"
 endfunction
 
 function fullscreen#windows#is_active()
-  return !empty(s:restore_data)
+  return g:fullscreen_active
 endfunction
 
